@@ -1,15 +1,15 @@
 Revision history for DAWG
 
-v0.0.3  2025-01-15
+v0.0.3  2025-06-15
     - README updated
     - License text updated in some files
 
-v0.0.2  2025-01-15
+v0.0.2  2025-06-15
     - Ran additional tests to verify functionality
     - Verified examples 
     - Updated META6
 
-v0.0.1  2025-01-06
+v0.0.1  2025-06-06
     - Initial release
     - Core DAWG functionality with add, contains, lookup, and find-prefixes
     - DAWG minimization for space efficiency
