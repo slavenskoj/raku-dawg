@@ -45,7 +45,7 @@ Danslav Slavenskoj
 
 Copyright 2025 Danslav Slavenskoj
 
-This library is licensed under the MIT License.
+This library is licensed under the Artistic License 2.0.
 
 =end pod
 

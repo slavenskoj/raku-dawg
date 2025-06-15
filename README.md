@@ -26,7 +26,7 @@ Choose traditional loading when lookup speed is critical and you can afford the 
 
 ## Background
 
-DAWGs were pioneered in the 1980s for spell-checkers and have since become fundamental in computational linguistics. They power modern applications from mobile keyboard autocorrect to DNA sequence analysis, word game AI, and full-text search engines. 
+DAWGs, also known as [deterministic acyclic finite state automaton](https://en.wikipedia.org/wiki/Deterministic_acyclic_finite_state_automaton), were pioneered in the 1980s for spell-checkers and have since become fundamental in computational linguistics. They power modern applications from mobile keyboard autocorrect to DNA sequence analysis, word game AI, and full-text search engines. 
 
 The DAWG structure automatically identifies and shares common prefixes (like a trie) and common suffixes (through node minimization). For example, "running", "runner", and "runs" share the prefix "run", while "singing" and "running" share the suffix "ing" through the same graph nodes. This dual compression of both prefixes and suffixes enables DAWGs to compress dictionaries by 10-50x compared to plain text while maintaining O(m) lookup time.
 
@@ -73,7 +73,7 @@ zef install DAWG
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/raku-dawg.git
+git clone https://github.com/slavenskoj/raku-dawg.git
 cd raku-dawg
 zef install .
 ```
