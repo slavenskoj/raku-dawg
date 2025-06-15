@@ -1,0 +1,46 @@
+{
+  "perl": "6.d",
+  "name": "DAWG",
+  "version": "0.0.2",
+  "description": "Directed Acyclic Word Graph implementation for efficient string storage and retrieval",
+  "authors": [
+    "Danslav Slavenskoj"
+  ],
+  "auth": "zef:slavenskoj",
+  "depends": [
+    "JSON::Fast",
+    "NativeCall"
+  ],
+  "build-depends": [],
+  "test-depends": [
+    "Test"
+  ],
+  "provides": {
+    "DAWG": "lib/DAWG.rakumod",
+    "DAWG::Node": "lib/DAWG/Node.rakumod",
+    "DAWG::Builder": "lib/DAWG/Builder.rakumod",
+    "DAWG::Serializer": "lib/DAWG/Serializer.rakumod",
+    "DAWG::Binary": "lib/DAWG/Binary.rakumod",
+    "DAWG::MMap": "lib/DAWG/MMap.rakumod",
+    "DAWG::Search::Pattern": "lib/DAWG/Search/Pattern.rakumod",
+    "DAWG::Search::Fuzzy": "lib/DAWG/Search/Fuzzy.rakumod"
+  },
+  "resources": [],
+  "license": "Artistic-2.0",
+  "tags": [
+    "DAWG",
+    "trie",
+    "data structure",
+    "string storage",
+    "compression",
+    "memory mapping",
+    "zero-copy",
+    "binary serialization",
+    "pattern matching",
+    "fuzzy search",
+    "edit distance",
+    "spell check"
+  ],
+  "api": "1",
+  "source-url": "https://github.com/slavenskoj/raku-dawg.git"
+}

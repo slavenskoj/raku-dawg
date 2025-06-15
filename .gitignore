@@ -1,0 +1,63 @@
+# Raku precompilation
+.precomp/
+lib/.precomp/
+
+raku-dawg/
+
+# Test artifacts
+*.dawg
+*.dawg.bin
+*.dawg.json
+test-*.bin
+test-*.json
+test-*.dawg
+/tmp/
+
+# Editor files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+blib/
+_build/
+Build
+Build.bat
+MYMETA.*
+pm_to_blib
+
+# Distribution files
+DAWG-*.tar.gz
+DAWG-*/
+.build/
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# Log files
+*.log
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Coverage reports
+cover_db/
+coverage/
+
+# Memory mapped test files
+*.mmap

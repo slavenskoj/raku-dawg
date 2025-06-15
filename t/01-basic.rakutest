@@ -1,0 +1,43 @@
+use v6.d;
+use Test;
+use DAWG;
+
+plan 15;
+
+# Test 1: Create DAWG
+my $dawg = DAWG.new;
+ok $dawg, 'Can create DAWG instance';
+
+# Test 2: Add words
+lives-ok { $dawg.add('apple') }, 'Can add word without value';
+lives-ok { $dawg.add('application', 42) }, 'Can add word with value';
+lives-ok { $dawg.add('apply', { id => 3 }) }, 'Can add word with complex value';
+
+# Test 3: Contains
+ok $dawg.contains('apple'), 'Contains added word';
+nok $dawg.contains('banana'), 'Does not contain non-added word';
+
+# Test 4: Lookup
+my $result = $dawg.lookup('apple');
+ok $result, 'Lookup returns result';
+is $result<word>, 'apple', 'Lookup returns correct word';
+
+$result = $dawg.lookup('application');
+is $result<value>, 42, 'Lookup returns correct value';
+
+# Test 5: Prefix search
+$dawg.add('app');
+my @prefixes = $dawg.find-prefixes('app');
+is @prefixes.elems, 4, 'Prefix search returns correct count';
+ok 'app' ∈ @prefixes, 'Prefix search includes exact match';
+ok 'apple' ∈ @prefixes, 'Prefix search includes longer words';
+
+# Test 6: Minimize
+lives-ok { $dawg.minimize }, 'Can minimize DAWG';
+
+# Test 7: Stats
+my %stats = $dawg.stats;
+ok %stats<nodes> > 0, 'Stats reports nodes';
+ok %stats<minimized>, 'Stats reports minimized state';
+
+done-testing;

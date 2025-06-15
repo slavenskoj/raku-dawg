@@ -1,0 +1,92 @@
+#!/usr/bin/env raku
+
+use v6.d;
+use Test;
+use lib 'lib';
+use DAWG;
+use DAWG::Search::Fuzzy;
+
+plan 18;
+
+# Test fuzzy search
+{
+    my $dawg = DAWG.new;
+    
+    # Add test words
+    my @words = <cat car care card coat dog dot apple apply hello world>;
+    $dawg.add($_) for @words;
+    $dawg.minimize;
+    
+    # Create search instance
+    my $search = DAWG::Search::Fuzzy.new(:$dawg);
+    
+    # Test 1: Exact match (distance 0)
+    my @matches = $search.search('cat', :max-distance(0));
+    is @matches.elems, 1, 'Exact match returns one result';
+    is @matches[0]<word>, 'cat', 'Exact match is correct';
+    is @matches[0]<distance>, 0, 'Distance is 0 for exact match';
+    
+    # Test 2: Single character substitution
+    @matches = $search.search('cot', :max-distance(1));
+    my @words-found = @matches.map(*<word>).sort;
+    ok 'cat' ∈ @words-found, 'Found "cat" from "cot" (1 substitution)';
+    ok 'dot' ∈ @words-found, 'Found "dot" from "cot" (1 substitution)';
+    
+    # Test 3: Single character deletion
+    @matches = $search.search('ct', :max-distance(1));
+    @words-found = @matches.map(*<word>).sort;
+    ok 'cat' ∈ @words-found, 'Found "cat" from "ct" (1 deletion)';
+    
+    # Test 4: Single character insertion
+    @matches = $search.search('cart', :max-distance(1));
+    @words-found = @matches.map(*<word>).sort;
+    ok 'car' ∈ @words-found, 'Found "car" from "cart" (1 insertion)';
+    ok 'card' ∈ @words-found, 'Found "card" from "cart" (1 substitution)';
+    
+    # Test 5: Distance 2 searches
+    @matches = $search.search('aple', :max-distance(2));
+    @words-found = @matches.map(*<word>).sort;
+    ok 'apple' ∈ @words-found, 'Found "apple" from "aple" (1 insertion)';
+    
+    @matches = $search.search('wrld', :max-distance(2));
+    @words-found = @matches.map(*<word>).sort;
+    ok 'world' ∈ @words-found, 'Found "world" from "wrld" (1 insertion)';
+    
+    # Test 6: No matches within distance
+    @matches = $search.search('xyz', :max-distance(1));
+    is @matches.elems, 0, 'No matches for "xyz" within distance 1';
+    
+    # Test 7: Ordering by distance
+    @matches = $search.search('cars', :max-distance(2));
+    ok @matches.elems > 0, 'Found matches for "cars"';
+    
+    # Check that results are sorted by distance
+    my $last-distance = 0;
+    my $sorted = True;
+    for @matches -> $match {
+        if $match<distance> < $last-distance {
+            $sorted = False;
+            last;
+        }
+        $last-distance = $match<distance>;
+    }
+    ok $sorted, 'Results are sorted by distance';
+    
+    # Test 8: Empty string search
+    @matches = $search.search('', :max-distance(3));
+    @words-found = @matches.map(*<word>).sort;
+    ok 'cat' ∈ @words-found, 'Empty string matches 3-letter words';
+    ok 'car' ∈ @words-found, 'Empty string matches 3-letter words';
+    
+    # Test 9: Large distance threshold
+    @matches = $search.search('a', :max-distance(10));
+    ok @matches.elems > 5, 'Large distance threshold returns many matches';
+    
+    # Test 10: Case sensitivity (should be case-sensitive)
+    $dawg.add('CAT');
+    @matches = $search.search('cat', :max-distance(0));
+    is @matches.elems, 1, 'Fuzzy search is case-sensitive';
+    is @matches[0]<word>, 'cat', 'Exact match is lowercase';
+}
+
+done-testing;

@@ -1,0 +1,36 @@
+use v6.d;
+use Test;
+use DAWG;
+
+plan 8;
+
+# Create and populate a DAWG
+my $dawg = DAWG.new;
+$dawg.add('test', 1);
+$dawg.add('testing', 2);
+$dawg.add('tester', 3);
+$dawg.add('rest', 4);
+$dawg.minimize;
+
+# Test saving
+my $temp-file = $*TMPDIR.add('test-dawg.json');
+lives-ok { $dawg.save($temp-file.Str) }, 'Can save DAWG';
+ok $temp-file.e, 'Save file exists';
+
+# Test loading
+my $loaded;
+lives-ok { $loaded = DAWG.load($temp-file.Str) }, 'Can load DAWG';
+ok $loaded, 'Loaded DAWG exists';
+
+# Verify loaded content
+ok $loaded.contains('test'), 'Loaded DAWG contains original words';
+is $loaded.lookup('testing')<value>, 2, 'Loaded DAWG preserves values';
+
+my @loaded-prefixes = $loaded.find-prefixes('test');
+is @loaded-prefixes.elems, 3, 'Loaded DAWG prefix search works';
+
+# Cleanup
+$temp-file.unlink;
+nok $temp-file.e, 'Temp file cleaned up';
+
+done-testing;

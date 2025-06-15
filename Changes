@@ -1,0 +1,26 @@
+Revision history for DAWG
+
+v0.0.2  2025-01-15
+    - Ran additional tests to verify functionality
+    - Verified examples 
+    - Updated META6
+
+v0.0.1  2025-01-06
+    - Initial release
+    - Core DAWG functionality with add, contains, lookup, and find-prefixes
+    - DAWG minimization for space efficiency
+    - JSON serialization support
+    - Binary serialization with ASCII optimization
+    - Memory-mapped file support for zero-copy access
+    - Value association with words
+    - Node ID support for direct traversal and bounded search algorithms
+    - Subtree statistics computation (word count, min/max length, depth)
+    - Pattern matching with wildcards (? and *)
+    - Fuzzy search with Levenshtein edit distance
+    - Spell-check functionality
+    - Automatic 7-bit Unicode compression for dictionaries with ≤89 unique characters
+    - Separate search modules (DAWG::Search::Pattern and DAWG::Search::Fuzzy)
+    - Comprehensive test suite with 125+ tests
+    - Full Unicode support
+    - Performance optimizations for large datasets
+    - Detailed documentation and examples

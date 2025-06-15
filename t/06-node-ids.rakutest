@@ -1,0 +1,55 @@
+#!/usr/bin/env raku
+
+use v6.d;
+use Test;
+use lib 'lib';
+use DAWG;
+
+plan 12;
+
+# Test node ID functionality
+{
+    my $dawg = DAWG.new;
+    
+    # Test 1: Root node has ID
+    ok $dawg.root-id.defined, 'Root node has an ID';
+    is $dawg.root-id, 0, 'Root node ID is 0';
+    
+    # Test 2: New nodes get sequential IDs
+    $dawg.add('cat');
+    $dawg.add('dog');
+    
+    my $root = $dawg.get-node-by-id(0);
+    ok $root.defined, 'Can retrieve root by ID';
+    
+    my $c-node = $root.get-edge('c');
+    ok $c-node.id.defined, 'Child node has ID';
+    ok $c-node.id > 0, 'Child node ID is greater than 0';
+    
+    # Test 3: ID lookup works
+    my $retrieved = $dawg.get-node-by-id($c-node.id);
+    ok $retrieved.defined, 'Can retrieve node by ID';
+    ok $retrieved === $c-node, 'Retrieved node is the same object';
+    
+    # Test 4: IDs persist through minimization
+    my $old-root-id = $dawg.root-id;
+    my $old-node-count = $dawg.node-by-id.elems;
+    
+    $dawg.minimize;
+    
+    ok $dawg.root-id.defined, 'Root ID exists after minimization';
+    ok $dawg.node-by-id.elems > 0, 'Node ID map rebuilt after minimization';
+    
+    # Test 5: Can traverse using IDs after minimization
+    my $min-root = $dawg.get-node-by-id($dawg.root-id);
+    ok $min-root.defined, 'Can get root after minimization';
+    
+    my $min-c = $min-root.get-edge('c');
+    ok $min-c.defined && $min-c.id.defined, 'Child nodes have IDs after minimization';
+    
+    # Test 6: Invalid ID returns undefined
+    my $invalid = $dawg.get-node-by-id(99999);
+    nok $invalid.defined, 'Invalid ID returns undefined';
+}
+
+done-testing;

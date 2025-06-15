@@ -1,0 +1,99 @@
+use v6.d;
+use Test;
+use DAWG;
+
+plan 20;
+
+# Test edge cases and special scenarios
+
+# Empty DAWG
+{
+    my $dawg = DAWG.new;
+    $dawg.minimize;
+    
+    nok $dawg.contains("anything"), 'Empty DAWG contains nothing';
+    is $dawg.find-prefixes("a").elems, 0, 'Empty DAWG has no prefixes';
+    is $dawg.lookup("test"), Nil, 'Empty DAWG lookup returns Nil';
+}
+
+# Single character words
+{
+    my $dawg = DAWG.new;
+    $dawg.add("a", 1);
+    $dawg.add("b", 2);
+    $dawg.add("c", 3);
+    $dawg.minimize;
+    
+    ok $dawg.contains("a"), 'Contains single character';
+    is $dawg.lookup("a")<value>, 1, 'Single character lookup works';
+    is $dawg.find-prefixes("").elems, 3, 'Empty prefix returns all words';
+}
+
+# Unicode support
+{
+    my $dawg = DAWG.new;
+    $dawg.add("привет", 1);  # Russian
+    $dawg.add("你好", 2);     # Chinese
+    $dawg.add("مرحبا", 3);    # Arabic
+    $dawg.add("🎉", 4);       # Emoji
+    $dawg.minimize;
+    
+    ok $dawg.contains("привет"), 'Contains Cyrillic word';
+    ok $dawg.contains("你好"), 'Contains Chinese word';
+    ok $dawg.contains("مرحبا"), 'Contains Arabic word';
+    ok $dawg.contains("🎉"), 'Contains emoji';
+    
+    is $dawg.lookup("привет")<value>, 1, 'Unicode lookup preserves value';
+}
+
+# Duplicate words
+{
+    my $dawg = DAWG.new;
+    $dawg.add("test", 1);
+    $dawg.add("test", 2);  # Should overwrite
+    $dawg.minimize;
+    
+    is $dawg.lookup("test")<value>, 2, 'Duplicate word overwrites value';
+}
+
+# Long words
+{
+    my $dawg = DAWG.new;
+    my $long-word = "a" x 1000;
+    $dawg.add($long-word, 42);
+    $dawg.minimize;
+    
+    ok $dawg.contains($long-word), 'Contains very long word';
+    is $dawg.lookup($long-word)<value>, 42, 'Long word lookup works';
+}
+
+# Common prefixes
+{
+    my $dawg = DAWG.new;
+    $dawg.add("test");
+    $dawg.add("testing");
+    $dawg.add("tester");
+    $dawg.add("tested");
+    $dawg.minimize;
+    
+    my @results = $dawg.find-prefixes("test");
+    is @results.elems, 4, 'Find all words with common prefix';
+    ok @results.grep("test"), 'Results include exact match';
+    ok @results.grep("testing"), 'Results include longer match';
+}
+
+# Special characters
+{
+    my $dawg = DAWG.new;
+    $dawg.add("hello-world", 1);
+    $dawg.add("hello_world", 2);
+    $dawg.add("hello.world", 3);
+    $dawg.add("hello world", 4);
+    $dawg.minimize;
+    
+    ok $dawg.contains("hello-world"), 'Contains hyphenated word';
+    ok $dawg.contains("hello world"), 'Contains word with space';
+    is $dawg.lookup("hello.world")<value>, 3, 'Special character lookup works';
+}
+
+done-testing;

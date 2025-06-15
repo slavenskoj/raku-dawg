@@ -1,0 +1,77 @@
+use v6.d;
+use Test;
+use DAWG;
+use DAWG::MMap;
+
+plan 10;
+
+# Performance and stress tests
+
+# Build a reasonably large DAWG
+my $dawg = DAWG.new;
+my $word-count = 1000;
+
+# Add words with patterns to ensure some sharing
+for ^$word-count -> $i {
+    my $base = <test work play code data run>.pick;
+    my $suffix = <ing ed er s es tion ment ly ness able>.pick;
+    my $word = $base ~ $suffix;
+    $dawg.add($word, $i);
+    
+    # Also add some unique words
+    $dawg.add("unique{$i}", $i * 10) if $i %% 10;
+}
+
+# Time the minimization
+my $start = now;
+$dawg.minimize;
+my $minimize-time = now - $start;
+
+ok $minimize-time < 5, "Minimization completes in reasonable time (<5s, actual: {$minimize-time.round(0.001)}s)";
+
+# Check compression ratio
+my $stats = $dawg.stats;
+ok $stats<nodes> < $word-count * 5, "Good compression ratio (nodes: {$stats<nodes>}, words: ~$word-count)";
+ok $stats<minimized>, "DAWG is minimized";
+
+# Test lookup performance
+$start = now;
+for ^100 {
+    $dawg.contains("testing");
+    $dawg.contains("unique50");
+    $dawg.contains("nonexistent");
+}
+my $lookup-time = (now - $start) / 300;
+ok $lookup-time < 0.001, "Fast lookups (<1ms, actual: {($lookup-time * 1000).round(0.01)}ms)";
+
+# Test binary save/load performance
+my $temp-file = $*TMPDIR.add('perf-test.dawg.bin');
+
+$start = now;
+$dawg.save-binary($temp-file.Str);
+my $save-time = now - $start;
+ok $save-time < 1, "Binary save is fast (<1s, actual: {$save-time.round(0.001)}s)";
+
+my $file-size = $temp-file.s;
+ok $file-size < 1_000_000, "Binary file size is reasonable (<1MB, actual: {($file-size / 1024).round(0.1)}KB)";
+
+$start = now;
+my $loaded = DAWG.load-binary($temp-file.Str);
+my $load-time = now - $start;
+ok $load-time < 1, "Binary load is fast (<1s, actual: {$load-time.round(0.001)}s)";
+
+# Test memory-mapped loading
+$start = now;
+my $mmap-dawg = DAWG::MMap.load($temp-file.Str);
+my $mmap-time = now - $start;
+ok $mmap-time < 0.1, "Memory-mapped load is very fast (<100ms, actual: {($mmap-time * 1000).round(0.01)}ms)";
+
+# Verify correctness after loading
+ok $loaded.contains("unique50"), "Binary loaded DAWG works correctly";
+ok $mmap-dawg.contains("unique50"), "Memory-mapped DAWG works correctly";
+
+# Cleanup
+$mmap-dawg.close;
+$temp-file.unlink;
+
+done-testing;

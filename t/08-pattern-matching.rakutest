@@ -1,0 +1,95 @@
+#!/usr/bin/env raku
+
+use v6.d;
+use Test;
+use lib 'lib';
+use DAWG;
+use DAWG::Search::Pattern;
+
+plan 20;
+
+# Test pattern matching
+{
+    my $dawg = DAWG.new;
+    
+    # Add test words
+    my @words = <cat car card care coat dog dot cat cathedral apply apple application>;
+    $dawg.add($_) for @words;
+    $dawg.minimize;
+    
+    # Create search instance
+    my $search = DAWG::Search::Pattern.new(:$dawg);
+    
+    # Test 1: Single ? wildcard
+    my @matches = $search.find('c?t');
+    ok @matches.sort eqv <cat>.sort, 'Pattern "c?t" matches "cat"';
+    
+    @matches = $search.find('ca?');
+    ok @matches.sort eqv <car cat>.sort, 'Pattern "ca?" matches "car" and "cat"';
+    
+    @matches = $search.find('?ar');
+    ok @matches.sort eqv <car>.sort, 'Pattern "?ar" matches "car"';
+    
+    # Test 2: Multiple ? wildcards
+    @matches = $search.find('c??');
+    ok @matches.sort eqv <car cat>.sort, 'Pattern "c??" matches 3-letter words starting with c';
+    
+    @matches = $search.find('???');
+    ok @matches.sort eqv <car cat dog dot>.sort, 'Pattern "???" matches all 3-letter words';
+    
+    # Test 3: * wildcard at end
+    @matches = $search.find('ca*');
+    ok @matches.sort eqv <car card care cat cathedral>.sort, 'Pattern "ca*" matches all words starting with "ca"';
+    
+    @matches = $search.find('app*');
+    ok @matches.sort eqv <apple application apply>.sort, 'Pattern "app*" matches all words starting with "app"';
+    
+    # Test 4: * wildcard at beginning
+    @matches = $search.find('*at');
+    ok @matches.sort eqv <cat coat>.sort, 'Pattern "*at" matches words ending with "at"';
+    
+    @matches = $search.find('*tion');
+    ok @matches.sort eqv <application>.sort, 'Pattern "*tion" matches words ending with "tion"';
+    
+    # Test 5: * wildcard in middle
+    @matches = $search.find('c*t');
+    ok @matches.sort eqv <cat coat>.sort, 'Pattern "c*t" matches words starting with "c" and ending with "t"';
+    
+    @matches = $search.find('c*e');
+    ok @matches.sort eqv <care>.sort, 'Pattern "c*e" matches "care"';
+    
+    # Test 6: Mixed wildcards
+    @matches = $search.find('c?r*');
+    ok @matches.sort eqv <car card care>.sort, 'Pattern "c?r*" matches correctly';
+    
+    @matches = $search.find('*a?');
+    ok @matches.sort eqv <car cat cathedral coat>.sort, 'Pattern "*a?" matches words with "a" as second-to-last char';
+    
+    # Test 7: Multiple * wildcards
+    @matches = $search.find('c*a*');
+    ok @matches.sort eqv <car card care cat cathedral coat>.sort, 'Pattern "c*a*" matches words with "c" then "a"';
+    
+    # Test 8: Empty results
+    @matches = $search.find('xyz*');
+    ok @matches.elems == 0, 'Pattern with no matches returns empty';
+    
+    @matches = $search.find('?????');
+    ok @matches.sort eqv <apple apply>.sort, 'Pattern "?????" matches 5-letter words';
+    
+    # Test 9: Exact match (no wildcards)
+    @matches = $search.find('dog');
+    ok @matches.sort eqv <dog>.sort, 'Exact pattern "dog" matches only "dog"';
+    
+    # Test 10: Empty pattern
+    @matches = $search.find('');
+    ok @matches.elems == 0, 'Empty pattern returns no matches';
+    
+    # Test 11: Only wildcards
+    @matches = $search.find('*');
+    ok @matches.sort eqv @words.unique.sort, 'Pattern "*" matches all words';
+    
+    @matches = $search.find('**');
+    ok @matches.sort eqv @words.unique.sort, 'Pattern "**" matches all words';
+}
+
+done-testing;

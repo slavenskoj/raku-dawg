@@ -1,0 +1,52 @@
+use v6.d;
+use Test;
+use DAWG;
+use DAWG::MMap;
+
+plan 12;
+
+# Create and populate a DAWG
+my $dawg = DAWG.new;
+$dawg.add('test', 1);
+$dawg.add('testing', 2);
+$dawg.add('tester', 3);
+$dawg.add('rest', 4);
+$dawg.add('restaurant', 5);
+$dawg.minimize;
+
+# Test binary saving
+my $temp-file = $*TMPDIR.add('test-dawg.bin');
+lives-ok { $dawg.save-binary($temp-file.Str) }, 'Can save DAWG in binary format';
+ok $temp-file.e, 'Binary file exists';
+
+# Check file has correct magic number
+my $fh = open $temp-file.Str, :r, :bin;
+my $magic = $fh.read(4);
+$fh.close;
+is $magic, "DAWG".encode('utf8'), 'Binary file has correct magic number';
+
+# Test loading binary file
+my $loaded;
+lives-ok { $loaded = DAWG.load($temp-file.Str) }, 'Can load binary DAWG';
+ok $loaded, 'Loaded DAWG exists';
+
+# Verify loaded content
+ok $loaded.contains('test'), 'Loaded DAWG contains original words';
+is $loaded.lookup('testing')<value>, 2, 'Loaded DAWG preserves values';
+
+my @loaded-prefixes = $loaded.find-prefixes('test');
+is @loaded-prefixes.elems, 3, 'Loaded DAWG prefix search works';
+
+# Test memory-mapped loading
+my $mmap-dawg;
+lives-ok { $mmap-dawg = DAWG::MMap.load($temp-file.Str) }, 'Can load DAWG using memory mapping';
+
+# Verify memory-mapped content
+ok $mmap-dawg.contains('test'), 'Memory-mapped DAWG contains original words';
+is $mmap-dawg.lookup('testing')<value>, 2, 'Memory-mapped DAWG preserves values';
+
+# Cleanup
+lives-ok { $mmap-dawg.close }, 'Can close memory-mapped DAWG';
+$temp-file.unlink;
+
+done-testing;

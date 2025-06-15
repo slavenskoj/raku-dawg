@@ -1,0 +1,47 @@
+#!/usr/bin/env raku
+
+use v6.d;
+use Test;
+use lib 'lib';
+use DAWG;
+
+plan 10;
+
+# Test subtree statistics
+{
+    my $dawg = DAWG.new;
+    
+    # Add words of varying lengths
+    my @words = <a an ant dog dogs dogma cat cats catch>;
+    $dawg.add($_) for @words;
+    $dawg.minimize;
+    $dawg.compute-subtree-stats;
+    
+    my $root = $dawg.get-node-by-id($dawg.root-id);
+    
+    # Test 1: Root stats
+    is $root.subtree-word-count, 9, 'Root has correct word count';
+    is $root.depth, 0, 'Root depth is 0';
+    
+    # Test 2: Single character prefix stats
+    my $a-node = $root.get-edge('a');
+    is $a-node.subtree-word-count, 3, 'Prefix "a" has 3 words';
+    is $a-node.depth, 1, 'Node "a" is at depth 1';
+    
+    my $d-node = $root.get-edge('d');
+    is $d-node.subtree-word-count, 3, 'Prefix "d" has 3 words';
+    
+    # Test 3: Deeper node stats
+    my $do-node = $d-node.get-edge('o');
+    is $do-node.subtree-word-count, 3, 'Prefix "do" has 3 words';
+    is $do-node.depth, 2, 'Node "do" is at depth 2';
+    
+    my $dog-node = $do-node.get-edge('g');
+    ok $dog-node.is-terminal, 'Node "dog" is terminal';
+    is $dog-node.subtree-word-count, 3, 'Prefix "dog" has 3 words';
+    
+    # Test 4: Terminal node stats
+    ok $a-node.is-terminal, 'Node "a" is terminal';
+}
+
+done-testing;
