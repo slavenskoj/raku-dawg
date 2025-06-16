@@ -1,5 +1,10 @@
 Revision history for DAWG
 
+v0.0.6  2025-06-17
+    - Fixed package structure for proper zef installation
+    - Fixed serialization in dictionary example to use binary format
+    - Improved error handling for save/load operations
+
 v0.0.5  2025-06-15
     - Tested search function
     - Added spell checking example script

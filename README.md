@@ -95,17 +95,22 @@ Fixed-width encoding is crucial for DAWG performance, which is why all our modes
 
 ## Installation
 
+You can install DAWG directly from the zef ecosystem:
+
 ```bash
 zef install DAWG
 ```
 
-Or install from source:
+Or install from source (recommended for the latest features):
 
 ```bash
 git clone https://github.com/slavenskoj/raku-dawg.git
 cd raku-dawg
 zef install .
 ```
+
+> **Note**: When using save/load functionality, it's recommended to use the binary format methods 
+> (`save-binary` and `load`) as they provide better performance and reliability compared to JSON serialization.
 
 ## Quick Start
 
@@ -427,6 +432,21 @@ https://github.com/slavenskoj/raku-dawg
 ## Author
 
 Danslav Slavenskoj
+
+## Version History
+
+See the [Changes](Changes) file for a detailed version history.
+
+### Latest Changes
+
+**v0.0.6 (2025-06-17)**
+- Fixed package structure for proper zef installation
+- Fixed serialization in dictionary example to use binary format
+- Improved error handling for save/load operations
+
+**v0.0.5 (2025-06-15)**
+- Tested search function
+- Added spell checking example script
 
 ## License
 

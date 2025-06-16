@@ -6,6 +6,7 @@ benchmark.dawg.bin
 benchmark.dawg.json
 
 raku-dawg/
+tests/
 
 # Test artifacts
 *.dawg

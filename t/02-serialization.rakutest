@@ -12,9 +12,9 @@ $dawg.add('tester', 3);
 $dawg.add('rest', 4);
 $dawg.minimize;
 
-# Test saving
-my $temp-file = $*TMPDIR.add('test-dawg.json');
-lives-ok { $dawg.save($temp-file.Str) }, 'Can save DAWG';
+# Test saving (using binary format instead of JSON)
+my $temp-file = $*TMPDIR.add('test-dawg.bin');
+lives-ok { $dawg.save-binary($temp-file.Str) }, 'Can save DAWG in binary format';
 ok $temp-file.e, 'Save file exists';
 
 # Test loading
