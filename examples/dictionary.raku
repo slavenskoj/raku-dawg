@@ -57,15 +57,25 @@ for $dict.find-prefixes('qu') -> $word {
     say "  $word (freq: $freq)";
 }
 
-# Save the dictionary
-say "\nSaving dictionary...";
-$dict.save('word-frequencies.dawg');
-say "Dictionary saved to word-frequencies.dawg";
+# Save the dictionary (using binary format instead of JSON)
+say "\nSaving dictionary in binary format...";
+$dict.save-binary('word-frequencies.dawg.bin');
+say "Dictionary saved to word-frequencies.dawg.bin";
 
 # Load and verify
 say "\nLoading dictionary...";
-my $loaded = DAWG.load('word-frequencies.dawg');
+my $loaded = DAWG.load('word-frequencies.dawg.bin');
 say "Loaded {$loaded.all-words.elems} words";
 
+# Demonstrate loaded dictionary works
+say "\nVerifying loaded dictionary:";
+for <the fox rabbit> -> $word {
+    if my $result = $loaded.lookup($word) {
+        say "  '$word' found with frequency: $result<value>";
+    } else {
+        say "  '$word' not found";
+    }
+}
+
 # Cleanup
-'word-frequencies.dawg'.IO.unlink;
+'word-frequencies.dawg.bin'.IO.unlink;
