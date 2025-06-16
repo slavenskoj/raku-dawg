@@ -1,5 +1,9 @@
 Revision history for DAWG
 
+v0.0.5  2025-06-15
+    - Tested search function
+    - Added spell checking example script
+
 v0.0.4  2025-06-15
     - Date typo fix in Changes file
 

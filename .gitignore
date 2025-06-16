@@ -2,6 +2,9 @@
 .precomp/
 lib/.precomp/
 
+benchmark.dawg.bin
+benchmark.dawg.json
+
 raku-dawg/
 
 # Test artifacts

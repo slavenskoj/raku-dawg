@@ -2,6 +2,35 @@
 
 A high-performance, memory-efficient data structure for storing and searching large sets of strings. This Raku implementation provides both traditional and zero-copy memory-mapped access to DAWG structures.
 
+DAWGs, also known as [deterministic acyclic finite state automaton](https://en.wikipedia.org/wiki/Deterministic_acyclic_finite_state_automaton), were pioneered in the 1980s for spell-checkers and have since become fundamental in computational linguistics. They power modern applications from mobile keyboard autocorrect to DNA sequence analysis, word game AI, and full-text search engines. 
+
+## Table of Contents
+
+- [Memory Mapping: Zero-Copy Performance](#memory-mapping-zero-copy-performance)
+- [Traditional DAWG: In-Memory Performance](#traditional-dawg-in-memory-performance)
+- [Background](#background)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Advanced Search Features](#advanced-search-features)
+- [Example: Spell Checker](#example-spell-checker)
+- [API Reference](#api-reference)
+  - [Methods](#methods)
+  - [DAWG::MMap Methods](#dawgmmap-methods)
+- [Performance](#performance)
+  - [Benchmarks](#benchmarks)
+- [Character Encoding and Storage](#character-encoding-and-storage)
+  - [ASCII Optimization](#ascii-optimization)
+  - [Compressed Unicode Mode (7-bit)](#compressed-unicode-mode-7-bit)
+  - [Why UTF-32?](#why-utf-32)
+  - [Automatic Type Management](#automatic-type-management)
+  - [Working with Optimizations](#working-with-optimizations)
+- [How It Works](#how-it-works)
+- [Contributing](#contributing)
+- [Author](#author)
+- [License](#license)
+- [See Also](#see-also)
+
 ## Memory Mapping: Zero-Copy Performance
 
 Memory mapping fundamentally changes how we access large data structures. Instead of loading an entire file into RAM, memory mapping creates a virtual view where file contents appear as regular memory. The operating system loads only the pages you actually access, on demand. For DAWGs, this means:
@@ -130,9 +159,47 @@ my $fuzzy-search = DAWG::Search::Fuzzy.new(:$dawg);
 my @suggestions = $fuzzy-search.search('aple', :max-distance(2));
 # Returns: [{word => 'apple', distance => 1}, ...]
 
-# Spell checking
-@suggestions = $fuzzy-search.spell-check('wrold');  # Returns suggestions
+# Find closest matches
+my @closest = $fuzzy-search.closest('compter', :limit(3));
+# Returns the 3 closest words by edit distance
 ```
+
+## Example: Spell Checker
+
+The DAWG module includes a complete spell checker example that demonstrates fuzzy matching capabilities:
+
+```bash
+# Run in demo mode
+raku examples/spell-checker.raku
+
+# Run in interactive mode
+raku examples/spell-checker.raku --interactive
+
+# Customize parameters
+raku examples/spell-checker.raku --max-distance=3 --suggestions=10
+```
+
+The spell checker demonstrates:
+
+- Loading dictionaries into DAWG structures
+- Real-time spell checking with fuzzy matching
+- Providing ranked suggestions by edit distance
+- Handling various types of spelling errors (missing letters, transpositions, etc.)
+
+Example output:
+
+```
+Checking 'helo' (Missing letter): ✗ Misspelled
+  Suggestions: hello (distance: 1)
+
+Checking 'wrold' (Transposed letters): ✗ Misspelled
+  Suggestions: world (distance: 2), word (distance: 2)
+
+Checking 'algorythm' (Common misspelling): ✗ Misspelled
+  Suggestions: algorithm (distance: 1)
+```
+
+
 
 ## API Reference
 
@@ -367,7 +434,7 @@ This library is licensed under the The Artistic License 2.0. See the [LICENSE](L
 
 ## See Also
 
-- [Examples](examples/) - Usage examples
+- [Examples](examples/) - Usage examples including spell checker
 - [Wikipedia: Directed Acyclic Word Graph](https://en.wikipedia.org/wiki/Deterministic_acyclic_finite_state_automaton)
 - [Original DAWG paper](https://dl.acm.org/doi/10.1145/375360.375365)
 
