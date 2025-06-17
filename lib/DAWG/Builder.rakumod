@@ -4,23 +4,6 @@ unit class DAWG::Builder;
 
 use DAWG::Node;
 
-=begin pod
-
-=head1 NAME
-
-DAWG::Builder - Builder class for minimizing DAWG structures
-
-=head1 DESCRIPTION
-
-This class handles the minimization of a DAWG by identifying and merging
-nodes that have identical right languages (suffixes).
-
-Copyright 2025 Danslav Slavenskoj
-
-This library is licensed under the Artistic License 2.0.
-
-=end pod
-
 has DAWG::Node $.root is required;
 has %!registry;  # signature -> node mapping
 has Int $.nodes-merged = 0;
