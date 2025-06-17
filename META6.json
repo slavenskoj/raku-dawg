@@ -1,7 +1,7 @@
 {
   "perl": "6.d",
   "name": "DAWG",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "Directed Acyclic Word Graph implementation for efficient string storage and retrieval",
   "authors": [
     "Danslav Slavenskoj"

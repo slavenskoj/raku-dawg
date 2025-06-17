@@ -9,14 +9,22 @@ has %!registry;  # signature -> node mapping
 has Int $.nodes-merged = 0;
 has Int $.next-id = 0;  # For assigning new IDs during minimization
 has %.id-map;  # Maps old node IDs to new node IDs
+has %.node-cache;  # Cache to avoid recreating nodes
 
 # Minimize the DAWG
 method minimize() {
-    # First, compute signatures for all nodes
-    self!compute-all-signatures($!root, SetHash.new);
+    # Reset state
+    %!registry = ();
+    %!node-cache = ();
+    $!nodes-merged = 0;
+    $!next-id = 0;
+    %!id-map = ();
     
-    # Then minimize by merging equivalent nodes
-    my $new-root = self!minimize-node($!root, SetHash.new);
+    # Assign unique IDs to all nodes first
+    self!assign-all-ids($!root, SetHash.new);
+    
+    # Minimize the tree bottom-up
+    my $new-root = self!minimize-recursive($!root, SetHash.new);
     
     # Count nodes and edges in the minimized DAWG
     my %stats = self!count-nodes-edges($new-root, SetHash.new);
@@ -24,60 +32,98 @@ method minimize() {
     return ($new-root, %stats);
 }
 
-# Compute signatures for all nodes (post-order traversal)
-method !compute-all-signatures(DAWG::Node $node, SetHash $visited) {
+# Assign IDs to all nodes
+method !assign-all-ids(DAWG::Node $node, SetHash $visited) {
     return if $visited{$node.WHERE};
     $visited{$node.WHERE} = True;
     
-    # First process all children
-    for $node.edges.values -> $child {
-        self!compute-all-signatures($child, $visited);
-    }
+    $node.id = $!next-id++ unless $node.id.defined;
     
-    # Then compute this node's signature
-    $node.compute-signature;
+    for $node.edges.values -> $child {
+        self!assign-all-ids($child, $visited);
+    }
 }
 
-# Minimize a node and its subtree
-method !minimize-node(DAWG::Node $node, SetHash $visited) {
-    return $node if $visited{$node.WHERE};
+# Recursive minimization (bottom-up)
+method !minimize-recursive(DAWG::Node $node, SetHash $visited) {
+    # Use node ID as cache key instead of WHERE
+    my $cache-key = $node.id;
+    return %!node-cache{$cache-key} if %!node-cache{$cache-key}:exists;
+    
+    # Mark as visited to detect cycles
     $visited{$node.WHERE} = True;
     
     # First minimize all children
-    my %new-edges;
+    my %minimized-edges;
     for $node.edges.kv -> $char, $child {
-        %new-edges{$char} = self!minimize-node($child, $visited);
+        # Skip if we're in a cycle
+        if $visited{$child.WHERE} {
+            # This is a cycle - just keep the reference for now
+            %minimized-edges{$char} = $child;
+        } else {
+            %minimized-edges{$char} = self!minimize-recursive($child, $visited);
+        }
     }
     
-    # Create a new node with minimized children
+    # Create new node with minimized children
     my $new-node = DAWG::Node.new(
         is-terminal => $node.is-terminal,
         value => $node.value
     );
     
-    for %new-edges.kv -> $char, $child {
+    # Add minimized edges
+    for %minimized-edges.kv -> $char, $child {
         $new-node.add-edge($char, $child);
     }
     
-    # Compute signature for the new node
+    # Compute signature
     $new-node.compute-signature;
     
-    # Check if an equivalent node already exists
+    # Check if equivalent node exists
     if %!registry{$new-node.signature}:exists {
-        $!nodes-merged++;
-        # Map the old node's ID to the existing node's ID
-        %!id-map{$node.id} = %!registry{$new-node.signature}.id if $node.id.defined;
-        return %!registry{$new-node.signature};
+        my $existing = %!registry{$new-node.signature};
+        
+        # Verify they're truly equivalent (not just same signature)
+        if self!nodes-are-equivalent($new-node, $existing) {
+            $!nodes-merged++;
+            %!id-map{$node.id} = $existing.id if $existing.id.defined;
+            %!node-cache{$cache-key} = $existing;
+            $visited{$node.WHERE}:delete;  # Remove from visited
+            return $existing;
+        }
     }
     
-    # Assign a new ID to this node
+    # Register new node
     $new-node.id = $!next-id++;
-    # Map the old node's ID to the new node's ID
-    %!id-map{$node.id} = $new-node.id if $node.id.defined;
-    
-    # Register this node
+    %!id-map{$node.id} = $new-node.id;
     %!registry{$new-node.signature} = $new-node;
+    %!node-cache{$cache-key} = $new-node;
+    
+    $visited{$node.WHERE}:delete;  # Remove from visited
     return $new-node;
+}
+
+# Check if two nodes are structurally equivalent
+method !nodes-are-equivalent(DAWG::Node $a, DAWG::Node $b) {
+    # Basic properties must match
+    return False unless $a.is-terminal == $b.is-terminal;
+    return False unless (!$a.value.defined && !$b.value.defined) ||
+                       ($a.value.defined && $b.value.defined && $a.value == $b.value);
+    
+    # Must have same number of edges
+    return False unless $a.edges.elems == $b.edges.elems;
+    
+    # All edges must match
+    for $a.edges.kv -> $char, $child-a {
+        return False unless $b.edges{$char}:exists;
+        
+        # For minimized nodes, we can compare by reference
+        # since equivalent subtrees will be the same object
+        my $child-b = $b.edges{$char};
+        return False unless $child-a.WHERE == $child-b.WHERE;
+    }
+    
+    return True;
 }
 
 # Count nodes and edges in the DAWG

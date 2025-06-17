@@ -1,8 +1,12 @@
 Revision history for DAWG
 
-v0.1.1  2025-06-17
-    - Fixed proper zef installation
-    - Now installs correctly
+v0.1.5  2025-06-17
+    - Fixed bug in minimization of large DAWGs
+    - Assigned stable IDs to all nodes before minimization
+    - Used proper caching with node IDs instead of memory addresses
+    - Implemented correct recursive minimization that processes nodes bottom-up
+    - Added proper cycle detection to handle any circular references
+    - Ensured node equivalence checking compares actual structure, not just signatures
 
 v0.0.6  2025-06-17
     - Fixed package structure for proper zef installation

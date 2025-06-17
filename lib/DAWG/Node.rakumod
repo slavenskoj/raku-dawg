@@ -64,7 +64,9 @@ method compute-signature() {
     # Include edge information
     for %!edges.keys.sort -> $char {
         my $child = %!edges{$char};
-        @parts.push: "$char:" ~ ($child.signature // $child.WHERE.Str);
+        # Child signatures must be computed before parent
+        die "Child node signature not computed! This is a bug in minimize()" unless $child.signature.defined;
+        @parts.push: "$char:" ~ $child.signature;
     }
     
     $!signature = @parts.join('|');
